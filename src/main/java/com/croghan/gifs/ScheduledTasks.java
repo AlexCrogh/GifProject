@@ -31,7 +31,7 @@ public class ScheduledTasks {
     public void addGifOne() throws IOException {
         System.out.println("attempting to retrieve gif from /r/gifs");
         Gif gif = getGif(id, "gifs");
-        String url = "https://localhost:8080/createGif";
+        String url = "http://localhost:8080/createGif";
         restTemplate.postForObject(url, gif, Gif.class);
         System.out.println("id now " + id);
     }
@@ -39,14 +39,14 @@ public class ScheduledTasks {
     @Scheduled(cron = "0 0 0 * * * ")
     public void addGifTwo() throws IOException {
         Gif gif = getGif(id, "gifrecipes");
-        String url = "https://localhost:8080/createGif";
+        String url = "http://localhost:8080/createGif";
         restTemplate.postForObject(url, gif, Gif.class);
         System.out.println("Post saved to db " + gif.getTitle());
     }
     @Scheduled(cron = "0 0 0 * * * ")
     public void addGifThree() throws IOException {
         Gif gif = getGif(id, "educationalgifs");
-        String url = "https://localhost:8080/createGif";
+        String url = "http://localhost:8080/createGif";
         restTemplate.postForObject(url, gif, Gif.class);
         System.out.println("Post saved to db " + gif.getTitle());
     }
@@ -56,14 +56,14 @@ public class ScheduledTasks {
     public void postToTwitter() throws Exception {
         OAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(consumerKeyStr, consumerSecretStr);
         oAuthConsumer.setTokenWithSecret(accessTokenStr, accessTokenSecretStr);
-        Gif gif = restTemplate.getForObject("https://localhost:8080/getTwitterGif", Gif.class);
+        Gif gif = restTemplate.getForObject("http://localhost:8080/getTwitterGif", Gif.class);
         System.out.println("Post retrieved from DB: " + gif.getTitle() + "-- id: " + gif.getId());
         if(gif.getTitle() != null){
             String str = URLEncoder.encode(gif.getTitle() +" (via reddit.com/r/" +  gif.getCategory()+")\n" + gif.getUrl(), "UTF-8");
             HttpPost httpPost = new HttpPost("http://api.twitter.com/1.1/statuses/update.json?status=" + str );
             oAuthConsumer.sign(httpPost);
             gif.setPosted(true);
-            restTemplate.put("https://localhost:8080/updateGif", gif);
+            restTemplate.put("http://localhost:8080/updateGif", gif);
             HttpClient httpClient = new DefaultHttpClient();
             HttpResponse httpResponse = httpClient.execute(httpPost);
             int statusCode = httpResponse.getStatusLine().getStatusCode();
