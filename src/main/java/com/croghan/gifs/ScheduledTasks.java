@@ -14,10 +14,10 @@ import twitter4j.conf.ConfigurationBuilder;
 @RestController
 public class ScheduledTasks {
 
-    private static String consumerKeyStr = "LQuDXRsc2NYeobJoyHQMdQlo1";
-    private static String consumerSecretStr = "po6aOSwnE3o03wgjHABT5OMgbe5Ah3FRkwaBd2Qqgyny6Tq8aW";
-    private static String accessTokenStr = "1052297317267755008-grBQs7l1WqUdRUfvuinn1svUm0rZNp";
-    private static String accessTokenSecretStr = "pTThV5mpLmif7I2EIV1lqrTehto1CiaW7ZqmMeYWatWQ9";
+    private static String consumerKeyStr = "";
+    private static String consumerSecretStr = "";
+    private static String accessTokenStr = "";
+    private static String accessTokenSecretStr = "";
 
     int id = 1;
     static RestTemplate restTemplate = new RestTemplate();
