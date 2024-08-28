@@ -1,6 +1,7 @@
 package com.croghan.gifs;
 
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
@@ -14,13 +15,15 @@ import twitter4j.conf.ConfigurationBuilder;
 @RestController
 public class ScheduledTasks {
 
-    private static String consumerKeyStr = "";
-    private static String consumerSecretStr = "";
-    private static String accessTokenStr = "";
-    private static String accessTokenSecretStr = "";
+    private final TwitterConfig twitterConfig;
+    private int id = 1;
+    private static final RestTemplate restTemplate = new RestTemplate();
 
-    int id = 1;
-    static RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    public ScheduledTasks(TwitterConfig twitterConfig) {
+        this.twitterConfig = twitterConfig;
+    }
+
 
     @Scheduled(cron = "@weekly ")
     public void addGifOne() throws IOException {
@@ -69,10 +72,10 @@ public class ScheduledTasks {
             String str = gif.getTitle() +" (via reddit.com/r/" +  gif.getCategory()+")\n" + gif.getUrl();
             ConfigurationBuilder cb = new ConfigurationBuilder();
             cb.setDebugEnabled(true)
-                    .setOAuthConsumerKey(consumerKeyStr)
-                    .setOAuthConsumerSecret(consumerSecretStr)
-                    .setOAuthAccessToken(accessTokenStr)
-                    .setOAuthAccessTokenSecret(accessTokenSecretStr);
+                    .setOAuthConsumerKey(twitterConfig.getApiKey())
+                    .setOAuthConsumerSecret(twitterConfig.getApiSecretKey())
+                    .setOAuthAccessToken(twitterConfig.getAccessToken())
+                    .setOAuthAccessTokenSecret(twitterConfig.getAccessTokenSecret());
             TwitterFactory tf = new TwitterFactory(cb.build());
             Twitter twitter = tf.getInstance();
             twitter.updateStatus(str);
