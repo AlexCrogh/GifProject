@@ -12,7 +12,6 @@ This project is a Spring Boot application designed to aggregate popular GIFs fro
 - [API Endpoints](#api-endpoints)
 - [Scheduled Tasks](#scheduled-tasks)
 - [Known Issues](#known-issues)
-- [License](#license)
 
 ## Features
 
@@ -36,7 +35,7 @@ This project is a Spring Boot application designed to aggregate popular GIFs fro
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/yourusername/gif-aggregator-poster.git
+    git clone https://github.com/AlexCrogh/GifProject.git
     cd gif-aggregator-poster
     ```
 
@@ -93,7 +92,7 @@ The following endpoints are available:
     - **Response**: A random `Gif` object from the database.
 
 - **Get Unposted GIF for Twitter**
-    - `GET /getTwitterGif`
+    - `GET /getRandomUnpostedGif`
     - **Response**: A random `Gif` object that hasn't been posted to Twitter yet.
 
 - **Get Most Recent GIF**
@@ -116,8 +115,6 @@ The application includes scheduled tasks to post GIFs to Twitter. These tasks ar
 ### Known Issues
 
 - **Pushshift API Changes**: The project relies on the Pushshift API to aggregate GIFs from Reddit. As of July 2023, Pushshift has restricted access to its API, which may cause the application to fail in fetching new GIFs. Consider exploring alternative APIs or datasets to replace Pushshift.
-- **Error Handling**: Some methods may not handle all edge cases or exceptions effectively. Improvements in error handling are recommended.
 
-## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+
