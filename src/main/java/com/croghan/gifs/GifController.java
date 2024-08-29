@@ -1,149 +1,121 @@
 package com.croghan.gifs;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Controller;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 @RestController
-@Controller
-@Service
 public class GifController {
     @Autowired
     public GifRepository gifRepository;
 
-    @Async
-    @RequestMapping(value = "/createGif", method = RequestMethod.POST)
-    public Gif createGif(@RequestBody Gif newGif){
-        try {
-            if (getGif(newGif.getId()) == null){
-                gifRepository.save(newGif);
-                System.out.println("Creation Success.");
-                return newGif;
-        }else {
-                System.out.println("Creation Failed. There is already a gif with that id.");
-                return null;
-            }
-        }catch (Exception e){
-            System.out.println("Could not create gif. Read error.");
-            System.out.println(e.toString());
-            return null;
+    @PostMapping("/createGif")
+    public ResponseEntity<Gif> createGif(@RequestBody Gif newGif) {
+        if (gifRepository.existsById(newGif.getId())) {
+            System.out.println("Creation Failed. There is already a gif with that id.");
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
+
+        gifRepository.save(newGif);
+        System.out.println("Creation Success.");
+        return new ResponseEntity<>(newGif, HttpStatus.CREATED);
     }
 
-    @Async
-    @RequestMapping(value = "/getGif/{id}", method = RequestMethod.GET)
-    public Gif getGif(@PathVariable("id") Integer id) {
-
-        try {
-            Gif gif = gifRepository.findById(id).get();
-            return gif;
-        }catch(Exception e){
-            System.out.println("Retrieval failed. There is no gif with id "+ id +".");
-            return null;
-        }
+    @GetMapping("/getGif/{id}")
+    public ResponseEntity<Gif> getGif(@PathVariable("id") Integer id) {
+        System.out.println("Received request for GIF with ID: " + id);
+        return gifRepository.findById(id)
+                .map(gif -> new ResponseEntity<>(gif, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
-    @Async
-    @RequestMapping(value = "/getAllGifs", method = RequestMethod.GET)
-    public ArrayList<Gif> getAll(){
-        Iterable<Gif> gifs = gifRepository.findAll();
-        ArrayList<Gif> gifList = new ArrayList<Gif>();
-        gifs.iterator().forEachRemaining(gifList::add);
-        return gifList;
+    @GetMapping("/getAllGifs")
+    public ResponseEntity<List<Gif>> getAllGifs() {
+        List<Gif> gifList = (List<Gif>) gifRepository.findAll();
+        return new ResponseEntity<>(gifList, HttpStatus.OK);
     }
 
-    @Async
-    @RequestMapping(value = "/getRandomGif", method = RequestMethod.GET)
-    public Gif getGif() {
-        try {
-            Random rand = new Random();
-            int count = (int) gifRepository.count();
-            int num = rand.nextInt(count);
-            ArrayList<Gif> gifs = getAll();
-            return gifs.get(num);
-        }
-        catch(Exception e) {
+
+    @GetMapping("/getRandomGif")
+    public ResponseEntity<Gif> getRandomGif() {
+        long count = gifRepository.count();
+
+        if (count == 0) {
             System.out.println("Retrieval failed. There are no gifs in the database.");
-            return null;
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+
+        int randomIndex = new Random().nextInt((int) count);
+        Page<Gif> gifsPage = gifRepository.findAll(PageRequest.of(randomIndex, 1));
+        Gif randomGif = gifsPage.stream().findFirst().orElse(null);
+
+        return new ResponseEntity<>(randomGif, HttpStatus.OK);
+    }
+
+    @GetMapping("/getRandomUnpostedGif")
+    public ResponseEntity<Gif> getRandomUnpostedGif() {
+        Gif randomGif = gifRepository.findRandomUnpostedGif();
+
+        if (randomGif == null) {
+            System.out.println("Retrieval failed. There are no unposted gifs in the database.");
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<>(randomGif, HttpStatus.OK);
     }
 
     @Async
-    @RequestMapping(value = "/getTwitterGif", method = RequestMethod.GET)
-    public Gif getTwitterGif() {
-        Random rand = new Random();
-        ArrayList<Gif> gifs= getAll();
-        if(gifRepository.count()>0) {
-            for (int i = 0; i < gifs.size(); i++) {
-                if (gifs.get(i).isPosted())
-                    gifs.remove(i);
-            }
-            if(gifs.size()>0) {
-                int num = rand.nextInt(gifs.size());
-                return gifs.get(num);
-            }else
-                System.out.println("Retrieval failed. All gifs in the database have already been posted.");
-                return null;
-        }
-        else{
+    @GetMapping("/getMostRecentGif")
+    public ResponseEntity<Gif> getMostRecentGif() {
+        Gif latestGif = gifRepository.findTopByOrderByIdDesc();
+
+        if (latestGif == null) {
             System.out.println("Retrieval failed. There are no gifs in the database.");
-            return null;
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+
+        return new ResponseEntity<>(latestGif, HttpStatus.OK);
     }
 
-    @Async
-    @RequestMapping(value = "/getMostRecentGif", method = RequestMethod.GET)
-    public Gif getMostRecentGif() {
-        try {
-            int dbCount = (int) gifRepository.count();
-            Gif gif = gifRepository.findById(dbCount).get();
-            return gif;
-        }
-        catch(Exception e){
-            System.out.println("Retrieval failed. There are no gifs in the database.");
-            return null;
-        }
+    @GetMapping("/getDatabaseCount")
+    public ResponseEntity<Long> getDatabaseCount() {
+        long count = gifRepository.count();
+        return new ResponseEntity<>(count, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/getDatabaseCount", method = RequestMethod.GET)
-    public long getDatabaseCount(){
-        return gifRepository.count();
-    }
-
-    @RequestMapping(value = "/updateGif", method = RequestMethod.PUT)
-    public Gif updateGif(@RequestBody Gif newGif) {
-
-        boolean updated =false;
-        for(Gif gif : gifRepository.findAll()){
-            if(gif.getId() == newGif.getId()){
-                gif = newGif;
-                gifRepository.save(gif);
-                updated = true;
-                System.out.println("The gif has been updated.");
-                break;
-            }
-        }
-        if(!updated)
+    @PutMapping("/updateGif")
+    public ResponseEntity<Gif> updateGif(@RequestBody Gif newGif) {
+        // Check if the GIF exists
+        if (!gifRepository.existsById(newGif.getId())) {
             System.out.println("Update failed. There is no gif in the database with id " + newGif.getId() + ".");
-        return newGif;
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        // Save the updated GIF
+        Gif updatedGif = gifRepository.save(newGif);
+        System.out.println("The gif has been updated.");
+        return new ResponseEntity<>(updatedGif, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/deleteGif/{id}", method = RequestMethod.DELETE)
-    public void deletePost(@PathVariable("id") int id) {
-        boolean deleted = false;
-        for(Gif gif : gifRepository.findAll()){
-            if(gif.getId() == id){
-                gifRepository.delete(gif);
-                deleted = true;
-            }
+    @DeleteMapping("/deleteGif/{id}")
+    public ResponseEntity<String> deleteGif(@PathVariable("id") int id) {
+        // Check if the GIF exists
+        if (!gifRepository.existsById(id)) {
+            System.out.println("Deletion failed. There is no gif with id " + id + ".");
+            return new ResponseEntity<>("Gif not found.", HttpStatus.NOT_FOUND);
         }
-        if(deleted)
-            System.out.println("The gif with id " + id + " has been deleted.");
-        else
-            System.out.println("Deletion failed. There is no gif with id " + id + "." );
+
+        // Delete the GIF
+        gifRepository.deleteById(id);
+        System.out.println("The gif with id " + id + " has been deleted.");
+        return new ResponseEntity<>("Gif deleted successfully.", HttpStatus.OK);
     }
+
 }

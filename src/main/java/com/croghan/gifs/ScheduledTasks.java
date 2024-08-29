@@ -25,7 +25,7 @@ public class ScheduledTasks {
     }
 
 
-    @Scheduled(cron = "@weekly ")
+   /* @Scheduled(cron = "@weekly ")
     public void addGifOne() throws IOException {
         System.out.println("attempting to retrieve gif from /r/gifs");
         Gif gif = getGif(id, "gifs");
@@ -61,12 +61,12 @@ public class ScheduledTasks {
         String url = "http://localhost:8080/createGif";
         restTemplate.postForObject(url, gif, Gif.class);
         System.out.println("Post saved to db " + gif.getTitle());
-    }
+    }*/
 
 
     @Scheduled(cron = "0 0 0 * * MON,WED,FRI")
     public void postToTwitter() throws Exception {
-        Gif gif = restTemplate.getForObject("http://localhost:8080/getTwitterGif", Gif.class);
+        Gif gif = restTemplate.getForObject("http://localhost:8080/getRandomUnpostedGif", Gif.class);
         System.out.println("Post retrieved from DB: " + gif.getTitle() + "-- id: " + gif.getId());
         if(gif.getTitle() != null){
             String str = gif.getTitle() +" (via reddit.com/r/" +  gif.getCategory()+")\n" + gif.getUrl();
@@ -88,7 +88,7 @@ public class ScheduledTasks {
 
     }
 
-    public Gif getGif(int id, String sub) throws IOException {
+   /* public Gif getGif(int id, String sub) throws IOException {
         //call pushshift api
         URL url = new URL("https://api.pushshift.io/reddit/search/submission/?subreddit="+ sub +
                 "&after=1w&sort=desc&sort_type=num_comments&is_video=false&over_18=false&stickied=false&size=1");
@@ -118,5 +118,5 @@ public class ScheduledTasks {
         inputReader.close();
         this.id++;
         return gif;
-    }
+    }*/
 }
